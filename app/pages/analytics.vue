@@ -126,7 +126,7 @@
             <span class="text-text-heading font-bold text-[18px]">{{ formatCurrency(merchant.amount) }}</span>
           </div>
           <div class="mt-4 h-1.5 w-full bg-[#e3ece8] rounded-full overflow-hidden">
-            <div class="h-full bg-primary rounded-full" :style="{ width: (merchant.amount / topMerchants[0].amount * 100) + '%' }"></div>
+            <div class="h-full bg-primary rounded-full" :style="{ width: (merchant.amount / (topMerchants[0]?.amount || 1) * 100) + '%' }"></div>
           </div>
         </div>
         <div v-if="topMerchants.length === 0" class="col-span-full py-10 text-center text-text-body/40 font-medium">
@@ -140,6 +140,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+
+definePageMeta({
+  middleware: 'auth'
+});
 
 type TimeFilter = 'week' | 'month' | 'year' | 'all';
 const timeFilter = ref<TimeFilter>('month');
@@ -299,8 +303,11 @@ const topMerchants = computed(() => {
     if (!counts[tx.merchant]) {
       counts[tx.merchant] = { amount: 0, count: 0, category: tx.category };
     }
-    counts[tx.merchant].amount += tx.amount;
-    counts[tx.merchant].count += 1;
+    const entry = counts[tx.merchant];
+    if (entry) {
+      entry.amount += tx.amount;
+      entry.count += 1;
+    }
   });
 
   return Object.entries(counts)

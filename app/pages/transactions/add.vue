@@ -144,6 +144,10 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
 
+definePageMeta({
+  middleware: 'auth'
+});
+
 const isSubmitting = ref(false);
 const showSuccess = ref(false);
 
@@ -204,6 +208,7 @@ input[type="number"]::-webkit-outer-spin-button {
 
 input[type="number"] {
   -moz-appearance: textfield;
+  appearance: none;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {

@@ -98,8 +98,13 @@
             </p>
           </div>
 
+          <!-- Error Message Display -->
+          <div v-if="error" class="mt-2 p-3 bg-red-50 border border-red-100 rounded-xl text-red-500 text-sm font-medium">
+            {{ error }}
+          </div>
+
           <div class="mt-4">
-            <UiButton variant="primary" type="submit" class="w-full h-[52px] text-[16px]">
+            <UiButton variant="primary" type="submit" class="w-full h-[52px] text-[16px]" :loading="loading">
               {{ isLogin ? 'Sign In' : 'Create Account' }}
             </UiButton>
           </div>
@@ -121,7 +126,16 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+// Disable default layout (sidebar) for login page
+definePageMeta({
+  layout: false
+});
+
 const isLogin = ref(true);
+const loading = ref(false);
+const error = ref('');
+
+const { fetch: refreshSession } = useUserSession();
 
 const name = ref('');
 const email = ref('');
@@ -129,6 +143,7 @@ const password = ref('');
 
 const toggleMode = () => {
   isLogin.value = !isLogin.value;
+  error.value = '';
   // Reset fields when switching forms
   if (isLogin.value) {
     name.value = '';
@@ -136,11 +151,30 @@ const toggleMode = () => {
   password.value = '';
 };
 
-const submitForm = () => {
-  if (isLogin.value) {
-    console.log('Logging in...', { email: email.value, password: password.value });
-  } else {
-    console.log('Registering...', { name: name.value, email: email.value, password: password.value });
+const submitForm = async () => {
+  loading.value = true;
+  error.value = '';
+
+  const endpoint = isLogin.value ? '/api/auth/login' : '/api/auth/register';
+  const body = isLogin.value 
+    ? { email: email.value, password: password.value }
+    : { name: name.value, email: email.value, password: password.value };
+
+  try {
+    await $fetch(endpoint, {
+      method: 'POST',
+      body
+    });
+    
+    // On rafraîchit la session cliente pour être sûr d'avoir les infos user
+    await refreshSession();
+    
+    // Redirect on success
+    await navigateTo('/');
+  } catch (err: any) {
+    error.value = err.data?.statusMessage || "Une erreur est survenue lors de l'authentification.";
+  } finally {
+    loading.value = false;
   }
 };
 </script>

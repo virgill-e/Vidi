@@ -135,6 +135,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
+definePageMeta({
+  middleware: 'auth'
+});
+
 const searchQuery = ref('');
 const selectedCategory = ref('all');
 

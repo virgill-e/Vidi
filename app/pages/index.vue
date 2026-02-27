@@ -139,6 +139,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
+definePageMeta({
+  middleware: 'auth'
+});
+
 // Time Filter State
 type TimeFilter = 'week' | 'month' | 'year' | 'all';
 const timeFilter = ref<TimeFilter>('month');
