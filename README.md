@@ -1,75 +1,89 @@
-# Nuxt Minimal Starter
+# 💰 Vidi Ledger
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Vidi Ledger est une application de gestion de dépenses.
 
-## Setup
+## 🚀 Technologies utilisées
 
-Make sure to install dependencies:
+L'application repose sur une stack technique de pointe :
+
+- **Framework** : [Nuxt 4](https://nuxt.com/) (Vue.js 3)
+- **Styling** : [Tailwind CSS 4](https://tailwindcss.com/) pour une interface fluide et responsive.
+- **Base de données** : 
+  - [Drizzle ORM](https://orm.drizzle.team/) pour la gestion du schéma et des requêtes.
+  - **SQLite** : Utilisé par défaut pour le développement local (simplicité).
+  - **PostgreSQL** : Supporté pour la production et le déploiement Docker.
+- **Authentification** : [Nuxt Auth Utils](https://github.com/Atinux/nuxt-auth-utils) avec hachage de mots de passe via **Bcrypt**.
+- **Conteneurisation** : Docker & Docker Compose.
+
+---
+
+## 🛠️ Installation et Exécution
+
+### 1. Prérequis
+- Node.js (v20+)
+- npm ou bun
+- Docker (optionnel, pour le mode production)
+
+### 2. Configuration (`.env`)
+Créez un fichier `.env` à la racine (ou modifiez l'existant) :
 
 ```bash
-# npm
+# Type de base de données : "sqlite" ou "postgres"
+DB_TYPE=sqlite
+DATABASE_URL=sqlite.db
+
+# Secret pour la session (minimum 32 caractères)
+NUXT_SESSION_PASSWORD=votre_secret_tres_long_et_securise
+```
+
+### 3. Exécution en mode Développement (Terminal)
+
+```bash
+# Installation des dépendances
 npm install
 
-# pnpm
-pnpm install
+# Lancer les migrations (création des tables)
+npm run db:push
 
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
+# Lancer le serveur de développement
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
+L'application sera disponible sur `http://localhost:3000`.
 
-## Production
+---
 
-Build the application for production:
+## 🐳 Exécution via Docker
 
+Docker permet de lancer l'application avec une base de données **PostgreSQL** isolée.
+
+### 1. Lancer l'environnement complète
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+docker-compose up -d
 ```
 
-Locally preview production build:
-
+### 2. Initialiser la base de données (uniquement la première fois)
+Une fois les conteneurs lancés, vous devez créer les tables dans le conteneur PostgreSQL :
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+docker-compose exec app npm run db:push
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+### 3. Arrêter l'environnement
+```bash
+docker-compose down
+```
+
+---
+
+## 🏗️ Structure du Projet
+
+- `/app` : Code frontend (Pages, Composants, Assets).
+- `/server` : Code backend (API, Base de données, Utils).
+- `drizzle.config.ts` : Configuration de l'ORM.
+- `docker-compose.yml` : Orchestration des services.
+
+---
+
+## 🔐 Sécurité
+- Les mots de passe sont hachés avec **Bcrypt**.
+- La session est sécurisée via des cookies chiffrés.
+- Les accès aux APIs sont protégés par un middleware d'authentification.
