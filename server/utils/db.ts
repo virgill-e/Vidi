@@ -5,15 +5,16 @@ import postgres from 'postgres';
 import * as schema from '../database/schema';
 
 const getDb = () => {
+    const dbType = process.env.DB_TYPE;
     const dbUrl = process.env.DATABASE_URL;
 
-    if (dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://'))) {
+    if (dbType === 'postgres' || (dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://')))) {
         // PostgreSQL for Production (Docker)
-        const client = postgres(dbUrl);
+        const client = postgres(dbUrl || '');
         return drizzlePg(client, { schema });
     } else {
-        // SQLite for Local Development
-        const sqlite = new Database('sqlite.db');
+        // SQLite for Local Development (Default)
+        const sqlite = new Database(dbUrl || 'sqlite.db');
         return drizzleSqlite(sqlite, { schema });
     }
 };
