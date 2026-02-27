@@ -15,7 +15,7 @@
           <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-lg">
             V
           </div>
-          <span class="text-white text-2xl font-semibold tracking-tight">Vidi</span>
+          <span class="text-white text-2xl font-semibold tracking-tight">Vidi Ledger</span>
         </div>
       </div>
       
@@ -31,7 +31,7 @@
       
       <!-- Footer Info -->
       <div class="relative z-10 flex items-center gap-4 text-white/50 text-sm font-medium">
-        <span>© 2026 Vidi App. All rights reserved.</span>
+        <span>© 2026 Vidi Ledger App. All rights reserved.</span>
       </div>
     </div>
 
@@ -44,7 +44,7 @@
           <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
             V
           </div>
-          <span class="text-text-heading text-xl font-bold tracking-tight">Vidi</span>
+          <span class="text-text-heading text-xl font-bold tracking-tight">Vidi Ledger</span>
         </div>
 
         <!-- Form Container -->

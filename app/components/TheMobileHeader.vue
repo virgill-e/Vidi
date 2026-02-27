@@ -4,7 +4,7 @@
       <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
         V
       </div>
-      <span class="text-text-heading text-xl font-bold tracking-tight">Vidi</span>
+      <span class="text-text-heading text-xl font-bold tracking-tight">Vidi Ledger</span>
     </div>
     <button @click="openMenu" class="w-10 h-10 flex items-center justify-center rounded-xl bg-card-inner border border-input-border text-primary active:scale-95 transition-transform z-10">
       <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
