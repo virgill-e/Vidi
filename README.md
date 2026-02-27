@@ -4,86 +4,61 @@ Vidi Ledger est une application de gestion de dépenses.
 
 ## 🚀 Technologies utilisées
 
-L'application repose sur une stack technique de pointe :
-
 - **Framework** : [Nuxt 4](https://nuxt.com/) (Vue.js 3)
-- **Styling** : [Tailwind CSS 4](https://tailwindcss.com/) pour une interface fluide et responsive.
-- **Base de données** : 
-  - [Drizzle ORM](https://orm.drizzle.team/) pour la gestion du schéma et des requêtes.
-  - **SQLite** : Utilisé par défaut pour le développement local (simplicité).
-  - **PostgreSQL** : Supporté pour la production et le déploiement Docker.
-- **Authentification** : [Nuxt Auth Utils](https://github.com/Atinux/nuxt-auth-utils) avec hachage de mots de passe via **Bcrypt**.
+- **Styling** : [Tailwind CSS 4](https://tailwindcss.com/)
+- **Base de données** : [Drizzle ORM](https://orm.drizzle.team/) (SQLite ou PostgreSQL)
 - **Conteneurisation** : Docker & Docker Compose.
 
 ---
 
-## 🛠️ Installation et Exécution
+## 🛠️ Installation et Exécution locale
 
-### 1. Prérequis
-- Node.js (v20+)
-- npm ou bun
-- Docker (optionnel, pour le mode production)
+1. **Installer les dépendances** :
+   ```bash
+   npm install
+   ```
 
-### 2. Configuration (`.env`)
-Créez un fichier `.env` à la racine (ou modifiez l'existant) :
+2. **Configurer le `.env`** :
+   Assurez-vous d'avoir `DB_TYPE=sqlite` et `DATABASE_URL=sqlite.db` pour le local.
 
+3. **Créer les tables** :
+   ```bash
+   npm run db:push
+   ```
+
+4. **Lancer l'app** :
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 🐳 Déploiement avec Docker / PostgreSQL
+
+### 1. Lancer l'environnement
+Assurez-vous que votre `.env` contient les accès à votre base PostgreSQL (via `DB_TYPE=postgres`).
 ```bash
-# Type de base de données : "sqlite" ou "postgres"
-DB_TYPE=sqlite
-DATABASE_URL=sqlite.db
-
-# Secret pour la session (minimum 32 caractères)
-NUXT_SESSION_PASSWORD=votre_secret_tres_long_et_securise
+docker-compose up -d --build
 ```
 
-### 3. Exécution en mode Développement (Terminal)
+### 2. Migration manuelle de la base de données
+Puisque l'application ne fait pas le push automatiquement au démarrage, vous devez le lancer manuellement depuis votre machine locale en pointant vers la base de production.
 
+**Option A : Depuis votre terminal local (Recommandé)**
+Si votre base PostgreSQL est accessible depuis votre machine :
 ```bash
-# Installation des dépendances
-npm install
-
-# Lancer les migrations (création des tables)
+# Vérifiez que DB_TYPE=postgres et DATABASE_URL pointe vers votre prod dans le .env
 npm run db:push
-
-# Lancer le serveur de développement
-npm run dev
 ```
-L'application sera disponible sur `http://localhost:3000`.
 
----
-
-## 🐳 Exécution via Docker
-
-Docker permet de lancer l'application avec une base de données **PostgreSQL** isolée.
-
-### 1. Lancer l'environnement complète
+**Option B : Via le conteneur (Si configuré)**
+Si vous avez accès au conteneur de l'app :
 ```bash
-docker-compose up -d
+docker exec -it vidi-ledger-app npx drizzle-kit push
 ```
-
-### 2. Initialiser la base de données (uniquement la première fois)
-Une fois les conteneurs lancés, vous devez créer les tables dans le conteneur PostgreSQL :
-```bash
-docker-compose exec app npm run db:push
-```
-
-### 3. Arrêter l'environnement
-```bash
-docker-compose down
-```
-
----
-
-## 🏗️ Structure du Projet
-
-- `/app` : Code frontend (Pages, Composants, Assets).
-- `/server` : Code backend (API, Base de données, Utils).
-- `drizzle.config.ts` : Configuration de l'ORM.
-- `docker-compose.yml` : Orchestration des services.
 
 ---
 
 ## 🔐 Sécurité
 - Les mots de passe sont hachés avec **Bcrypt**.
 - La session est sécurisée via des cookies chiffrés.
-- Les accès aux APIs sont protégés par un middleware d'authentification.

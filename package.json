@@ -9,10 +9,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "db:push": "drizzle-kit push",
-    "db:migrate": "drizzle-kit push --force",
     "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
-    "start:prod": "npm run db:migrate && node .output/server/index.mjs"
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
