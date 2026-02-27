@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #294b3c;
+  --color-primary-light: #e1ede3;
+  --color-bg-base: #ebf0f4;
+  --color-card: #f8fbfa;
+  --color-card-inner: #fdfffe;
+  --color-text-heading: #0a1410;
+  --color-text-body: #2c3e34;
+  --color-input-bg: #f4f6f8;
+  --color-input-border: #d4d8db;
+}
+
+html, body {
+  @apply bg-bg-base text-text-body antialiased;
+}

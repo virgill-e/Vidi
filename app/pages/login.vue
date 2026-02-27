@@ -1,0 +1,146 @@
+<template>
+  <div class="min-h-screen flex text-text-body bg-bg-base">
+    
+    <!-- Left Visual Panel (Desktop only) -->
+    <div class="hidden lg:flex lg:w-1/2 bg-primary relative overflow-hidden p-12 flex-col justify-between">
+      <!-- Decorative Background Elements -->
+      <div class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+        <div class="absolute -top-[15%] -left-[10%] w-[60%] h-[60%] rounded-full bg-white/5 blur-[100px]"></div>
+        <div class="absolute bottom-[0%] -right-[15%] w-[80%] h-[80%] rounded-full bg-[#1e3a2e]/60 blur-[120px]"></div>
+      </div>
+      
+      <!-- Brand/Logo -->
+      <div class="relative z-10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold text-xl shadow-lg">
+            V
+          </div>
+          <span class="text-white text-2xl font-semibold tracking-tight">Vidi</span>
+        </div>
+      </div>
+      
+      <!-- Hero Text -->
+      <div class="relative z-10 max-w-lg mb-20">
+        <h1 class="text-4xl md:text-5xl leading-[1.15] font-medium text-white mb-6 tracking-tight">
+          Track your expenses securely & achieve financial goals.
+        </h1>
+        <p class="text-primary-light/80 text-lg leading-relaxed font-light">
+          Join thousands of users who are already managing their money smarter and faster every single day.
+        </p>
+      </div>
+      
+      <!-- Footer Info -->
+      <div class="relative z-10 flex items-center gap-4 text-white/50 text-sm font-medium">
+        <span>© 2026 Vidi App. All rights reserved.</span>
+      </div>
+    </div>
+
+    <!-- Right Form Panel -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 xl:p-24 shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.05)] z-20 bg-bg-base min-h-screen lg:min-h-0">
+      
+      <div class="w-full max-w-[440px] flex flex-col">
+        <!-- Mobile Brand/Logo (hidden on desktop) -->
+        <div class="lg:hidden flex items-center gap-3 mb-8">
+          <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md">
+            V
+          </div>
+          <span class="text-text-heading text-xl font-bold tracking-tight">Vidi</span>
+        </div>
+
+        <!-- Form Container -->
+        <div class="w-full bg-card-inner lg:bg-transparent shadow-2xl shadow-black/5 lg:shadow-none rounded-3xl p-8 sm:p-10 lg:p-0 border border-white/60 lg:border-none relative z-10">
+        <div class="mb-10 lg:mb-12">
+          <h2 class="text-[32px] font-semibold text-text-heading mb-3 tracking-tight">
+            {{ isLogin ? 'Welcome back' : 'Create an account' }}
+          </h2>
+          <p class="text-text-body/70 text-[15px]">
+            {{ isLogin ? 'Please enter your details to sign in.' : 'Start your journey with us today.' }}
+          </p>
+        </div>
+
+        <form @submit.prevent="submitForm" class="flex flex-col gap-5">
+          <!-- Name Field (Only on Register) -->
+          <UiInput
+            v-if="!isLogin"
+            id="name"
+            label="Full Name"
+            type="text"
+            placeholder="John Doe"
+            v-model="name"
+          />
+
+          <UiInput
+            id="email"
+            label="Email address"
+            type="email"
+            placeholder="name@example.com"
+            v-model="email"
+          />
+          
+          <div class="flex flex-col gap-1.5">
+            <div class="flex justify-between items-center mb-0.5">
+              <label for="password" class="text-[15px] font-medium text-text-heading">
+                Password
+              </label>
+              <a v-if="isLogin" href="#" class="text-[13px] font-medium text-primary hover:text-primary/70 transition-colors">
+                Forgot password?
+              </a>
+            </div>
+            <UiInput
+              id="password"
+              :label="''"
+              type="password"
+              placeholder="••••••••"
+              v-model="password"
+            />
+            <p v-if="!isLogin" class="text-[13px] text-text-body/60 mt-1">
+              Must be at least 8 characters.
+            </p>
+          </div>
+
+          <div class="mt-4">
+            <UiButton variant="primary" type="submit" class="w-full h-[52px] text-[16px]">
+              {{ isLogin ? 'Sign In' : 'Create Account' }}
+            </UiButton>
+          </div>
+          
+        </form>
+
+        <p class="mt-10 text-center text-[15px] text-text-body/70">
+          {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
+          <button @click="toggleMode" class="font-semibold text-primary hover:text-primary/70 focus:outline-none transition-colors ml-1">
+            {{ isLogin ? 'Create one' : 'Log in' }}
+          </button>
+        </p>
+      </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const isLogin = ref(true);
+
+const name = ref('');
+const email = ref('');
+const password = ref('');
+
+const toggleMode = () => {
+  isLogin.value = !isLogin.value;
+  // Reset fields when switching forms
+  if (isLogin.value) {
+    name.value = '';
+  }
+  password.value = '';
+};
+
+const submitForm = () => {
+  if (isLogin.value) {
+    console.log('Logging in...', { email: email.value, password: password.value });
+  } else {
+    console.log('Registering...', { name: name.value, email: email.value, password: password.value });
+  }
+};
+</script>
