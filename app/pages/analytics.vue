@@ -19,14 +19,22 @@
     </div>
 
     <!-- Top Stats Row -->
-    <div class="grid grid-cols-1 gap-6">
-      <div v-for="stat in topStats" :key="stat.label" class="bg-card-inner rounded-[36px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] transition-transform hover:-translate-y-1">
-        <span class="text-text-body/50 text-[14px] font-semibold uppercase tracking-wider">{{ stat.label }}</span>
-        <div class="text-[32px] font-bold text-text-heading mt-2">{{ stat.value }}</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="bg-card-inner rounded-[36px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] transition-transform hover:-translate-y-1">
+        <span class="text-text-body/50 text-[14px] font-semibold uppercase tracking-wider">Dépenses Totales</span>
+        <div class="text-[32px] font-bold text-text-heading mt-2">{{ currentTotal }}</div>
+      </div>
+      <div class="bg-card-inner rounded-[36px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] transition-transform hover:-translate-y-1">
+        <span class="text-text-body/50 text-[14px] font-semibold uppercase tracking-wider">Nombre de transactions</span>
+        <div class="text-[32px] font-bold text-text-heading mt-2">{{ filteredTransactions.length }}</div>
+      </div>
+      <div class="bg-card-inner rounded-[36px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] transition-transform hover:-translate-y-1">
+        <span class="text-text-body/50 text-[14px] font-semibold uppercase tracking-wider">Moyenne / jour</span>
+        <div class="text-[32px] font-bold text-text-heading mt-2">{{ formatCurrency(dailyAverage) }}</div>
       </div>
     </div>
 
-    <!-- Charts Grid (Vertical Stack for more space) -->
+    <!-- Charts Grid -->
     <div class="flex flex-col gap-8 lg:gap-10">
       
       <!-- Spending Distribution (Category Breakdown) -->
@@ -54,17 +62,22 @@
             </div>
           </div>
 
-          <!-- Legend (2 Columns on Desktop) -->
+          <!-- Legend -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-5 grow w-full min-w-0 py-2">
             <div v-for="cat in categoryComparison" :key="cat.name" class="flex items-center justify-between group cursor-default gap-4 border-b border-[#eff3f1]/50 pb-2">
               <div class="flex items-center gap-3 min-w-0">
-                <div class="w-3.5 h-3.5 rounded-full shrink-0" :style="{ backgroundColor: cat.color }"></div>
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" :style="{ backgroundColor: cat.color }">
+                  <span v-html="cat.icon" class="scale-75"></span>
+                </div>
                 <span class="text-text-heading font-semibold text-[16px] group-hover:text-primary transition-colors whitespace-nowrap">{{ cat.name }}</span>
               </div>
               <div class="flex items-center gap-4 shrink-0">
                 <span class="text-text-body/40 text-[14px] font-medium">{{ cat.percentage }}%</span>
                 <span class="text-text-heading font-bold text-[16px] text-right tabular-nums">{{ formatCurrency(cat.amount) }}</span>
               </div>
+            </div>
+            <div v-if="categoryComparison.length === 0" class="col-span-full py-10 text-center text-text-body/40 italic">
+              Aucune donnée pour cette période
             </div>
           </div>
         </div>
@@ -79,20 +92,17 @@
           <span class="text-white/60 text-[13px] font-medium bg-white/10 px-4 py-1.5 rounded-full">{{ timeFilterLabel }}</span>
         </div>
 
-        <div class="flex items-end justify-between grow gap-3 sm:gap-5 relative z-10 mb-2">
+        <div class="flex items-end justify-between grow gap-3 sm:gap-5 relative z-10 mb-2 min-h-[250px]">
           <div v-for="day in weekdaySpending" :key="day.label" class="flex flex-col items-center grow group">
             <div class="w-full relative flex flex-col justify-end h-64 pb-1">
-              <!-- Amount Label (Always visible, enhanced on hover) -->
               <div class="text-center mb-3 transition-all duration-300 transform group-hover:-translate-y-1">
                 <span class="text-[10px] sm:text-[12px] font-bold text-white/50 group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
                   {{ formatCurrency(day.amount) }}
                 </span>
               </div>
-              
-              <!-- Bar -->
               <div 
                 class="w-full bg-[#92d3a7] rounded-t-2xl transition-all duration-700 ease-out origin-bottom relative shadow-lg group-hover:bg-white group-hover:shadow-[0_0_20px_rgba(146,211,167,0.4)]"
-                :style="{ height: day.percentage + '%' }"
+                :style="{ height: Math.max(day.percentage, 5) + '%' }"
               >
               </div>
             </div>
@@ -113,11 +123,11 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div v-for="(merchant, index) in topMerchants" :key="index" class="p-6 rounded-3xl bg-bg-base/50 border border-[#eff3f1] hover:border-primary/20 hover:bg-white transition-all group">
           <div class="flex items-center gap-4 mb-4">
-            <div :class="['w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-sm', merchant.meta?.bgColor]">
-              <span v-html="merchant.meta?.icon" class="scale-90"></span>
+            <div class="w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-sm" :style="{ backgroundColor: merchant.color }">
+              <span v-html="merchant.icon" class="scale-90"></span>
             </div>
-            <div>
-              <h3 class="text-text-heading font-bold text-[16px] group-hover:text-primary transition-colors">{{ merchant.name }}</h3>
+            <div class="min-w-0">
+              <h3 class="text-text-heading font-bold text-[16px] group-hover:text-primary transition-colors truncate">{{ merchant.name }}</h3>
               <span class="text-text-body/40 text-[13px] font-medium">{{ merchant.count }} transactions</span>
             </div>
           </div>
@@ -130,7 +140,7 @@
           </div>
         </div>
         <div v-if="topMerchants.length === 0" class="col-span-full py-10 text-center text-text-body/40 font-medium">
-          Pas de données suffisantes pour cette période.
+          Dépensez un peu plus pour voir vos statistiques ici !
         </div>
       </div>
     </div>
@@ -139,11 +149,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 definePageMeta({
   middleware: 'auth'
 });
+
+const categoriesList = ref<any[]>([]);
+const expensesList = ref<any[]>([]);
+
+const fetchData = async () => {
+  const [cats, exps] = await Promise.all([
+    $fetch('/api/categories'),
+    $fetch('/api/expenses')
+  ]);
+  categoriesList.value = cats as any[];
+  expensesList.value = exps as any[];
+};
+
+onMounted(fetchData);
 
 type TimeFilter = 'week' | 'month' | 'year' | 'all';
 const timeFilter = ref<TimeFilter>('month');
@@ -165,43 +189,9 @@ const timeFilterLabel = computed(() => {
   return labels[timeFilter.value];
 });
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
+const formatCurrency = (valueInCents: number) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(valueInCents / 100);
 };
-
-const categoryMap: Record<string, { bgColor: string, icon: string, color: string }> = {
-  'Alimentation': { color: '#679178', bgColor: 'bg-[#679178]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>' },
-  'Abonnements': { color: '#294b3c', bgColor: 'bg-primary', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>' },
-  'Transports': { color: '#223d31', bgColor: 'bg-[#223d31]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>' },
-  'Shopping': { color: '#557a66', bgColor: 'bg-[#557a66]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>' },
-  'Logement': { color: '#1b3127', bgColor: 'bg-[#1b3127]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>' },
-  'Sorties': { color: '#3b5e4a', bgColor: 'bg-[#3b5e4a]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" /></svg>' },
-  'Santé & Sport': { color: '#1b3127', bgColor: 'bg-[#1b3127]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>' }
-};
-
-interface Transaction {
-  merchant: string;
-  category: string;
-  date: string;
-  amount: number;
-}
-
-const transactions = ref<Transaction[]>([
-  { merchant: 'Delhaize', category: 'Alimentation', date: '2026-02-27', amount: 65.20 },
-  { merchant: 'Match', category: 'Shopping', date: '2026-02-26', amount: 22.10 },
-  { merchant: 'Spotify', category: 'Abonnements', date: '2026-02-26', amount: 12.99 },
-  { merchant: 'SNCB', category: 'Transports', date: '2026-02-21', amount: 24.50 },
-  { merchant: 'Amazon', category: 'Shopping', date: '2026-02-18', amount: 35.00 },
-  { merchant: 'Rent', category: 'Logement', date: '2026-02-01', amount: 1200.00 },
-  { merchant: 'Restaurant Le Local', category: 'Sorties', date: '2026-02-15', amount: 45.00 },
-  { merchant: 'Delhaize', category: 'Alimentation', date: '2026-02-10', amount: 89.40 },
-  { merchant: 'Colruyt', category: 'Alimentation', date: '2026-01-15', amount: 125.50 },
-  { merchant: 'Basic Fit', category: 'Santé & Sport', date: '2026-01-10', amount: 29.99 },
-  { merchant: 'Netflix', category: 'Abonnements', date: '2026-02-14', amount: 17.99 },
-  { merchant: 'Uber', category: 'Transports', date: '2026-02-20', amount: 18.20 },
-  { merchant: 'Apple Store', category: 'Shopping', date: '2025-11-24', amount: 899.00 },
-  { merchant: 'IKEA', category: 'Logement', date: '2024-05-12', amount: 3450.50 },
-]);
 
 const getWeekNumber = (date: Date) => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -212,8 +202,8 @@ const getWeekNumber = (date: Date) => {
 };
 
 const filteredTransactions = computed(() => {
-  const now = new Date('2026-02-27');
-  return transactions.value.filter(tx => {
+  const now = new Date();
+  return expensesList.value.filter(tx => {
     const txDate = new Date(tx.date);
     if (timeFilter.value === 'week') {
       return getWeekNumber(txDate) === getWeekNumber(now) && txDate.getFullYear() === now.getFullYear();
@@ -232,48 +222,46 @@ const currentTotalValue = computed(() => {
 
 const currentTotal = computed(() => formatCurrency(currentTotalValue.value));
 
-const topStats = computed(() => [
-  { label: 'Dépenses Totales', value: currentTotal.value },
-]);
+const dailyAverage = computed(() => {
+  if (filteredTransactions.value.length === 0) return 0;
+  
+  const dates = filteredTransactions.value.map(tx => new Date(tx.date).toLocaleDateString());
+  const uniqueDays = new Set(dates).size || 1;
+  return currentTotalValue.value / uniqueDays;
+});
 
 const categoryComparison = computed(() => {
-  const stats: Record<string, number> = {};
+  const stats: Record<number, { name: string, amount: number, color: string, icon: string }> = {};
   filteredTransactions.value.forEach(tx => {
-    stats[tx.category] = (stats[tx.category] || 0) + tx.amount;
+    if (!stats[tx.category.id]) {
+      stats[tx.category.id] = { 
+        name: tx.category.name, 
+        amount: 0, 
+        color: tx.category.color,
+        icon: tx.category.icon
+      };
+    }
+    stats[tx.category.id].amount += tx.amount;
   });
   
   const total = currentTotalValue.value || 1;
-  const entries = Object.entries(stats)
-    .map(([name, amount]) => ({
-      name,
-      amount,
-      percentage: Math.round((amount / total) * 100),
-      color: categoryMap[name]?.color || '#94a3b8'
+  return Object.values(stats)
+    .map(s => ({
+      ...s,
+      percentage: Math.round((s.amount / total) * 100)
     }))
     .sort((a, b) => b.amount - a.amount);
-
-  if (entries.length <= 6) return entries;
-
-  const topEntries = entries.slice(0, 5);
-  const remainingEntries = entries.slice(5);
-  const otherAmount = remainingEntries.reduce((acc, curr) => acc + curr.amount, 0);
-  
-  topEntries.push({
-    name: 'Autres',
-    amount: otherAmount,
-    percentage: Math.round((otherAmount / total) * 100),
-    color: '#94a3b8' // Slate-400 for 'Others'
-  });
-
-  return topEntries;
 });
 
 const donutSegments = computed(() => {
   let currentOffset = 0;
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius; // 251.32
+
   return categoryComparison.value.map(cat => {
-    const dashArray = `${(cat.percentage * 251.2) / 100} 251.2`;
+    const dashArray = `${(cat.percentage * circumference) / 100} ${circumference}`;
     const dashOffset = -currentOffset;
-    currentOffset += (cat.percentage * 251.2) / 100;
+    currentOffset += (cat.percentage * circumference) / 100;
     return { ...cat, dashArray, dashOffset: dashOffset.toString() };
   });
 });
@@ -284,37 +272,37 @@ const weekdaySpending = computed(() => {
   
   filteredTransactions.value.forEach(tx => {
     let day = new Date(tx.date).getDay();
-    day = day === 0 ? 6 : day - 1; // Map to 0-6 (Mon-Sun)
-    const current = amounts[day] || 0;
-    amounts[day] = current + tx.amount;
+    day = day === 0 ? 6 : day - 1; // Mon=0, Sun=6
+    amounts[day] += tx.amount;
   });
 
-  const max = Math.max(...amounts.filter((v): v is number => v !== undefined), 1);
+  const max = Math.max(...amounts, 1);
   return days.map((label, i) => ({
     label,
-    amount: amounts[i] || 0,
-    percentage: ((amounts[i] || 0) / max) * 100
+    amount: amounts[i],
+    percentage: (amounts[i] / max) * 100
   }));
 });
 
 const topMerchants = computed(() => {
-  const counts: Record<string, { amount: number, count: number, category: string }> = {};
+  const counts: Record<string, { amount: number, count: number, icon: string, color: string }> = {};
   filteredTransactions.value.forEach(tx => {
     if (!counts[tx.merchant]) {
-      counts[tx.merchant] = { amount: 0, count: 0, category: tx.category };
+      counts[tx.merchant] = { 
+        amount: 0, 
+        count: 0, 
+        icon: tx.category.icon,
+        color: tx.category.color 
+      };
     }
-    const entry = counts[tx.merchant];
-    if (entry) {
-      entry.amount += tx.amount;
-      entry.count += 1;
-    }
+    counts[tx.merchant].amount += tx.amount;
+    counts[tx.merchant].count += 1;
   });
 
   return Object.entries(counts)
     .map(([name, data]) => ({
       name,
-      ...data,
-      meta: categoryMap[data.category] || categoryMap['Shopping']
+      ...data
     }))
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 4);
@@ -322,14 +310,9 @@ const topMerchants = computed(() => {
 </script>
 
 <style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
 </style>
