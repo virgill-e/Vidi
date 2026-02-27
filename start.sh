@@ -1,13 +1,15 @@
 #!/bin/sh
 
-# On attend un tout petit peu pour que postgres soit totalement prêt à recevoir des commandes
-echo "Attente de la base de données..."
-sleep 2
+echo "⏳ Attente de la base de données PostgreSQL..."
 
-# On pousse le schéma vers la base de données
-echo "Exécution de db:push..."
-npx drizzle-kit push
+# On utilise npx pour appeler drizzle-kit et tester la connexion
+# On boucle jusqu'à ce que la base réponde
+until npx drizzle-kit push --force > /dev/null 2>&1; do
+  echo "... la base n'est pas encore prête, nouvelle tentative dans 2s ..."
+  sleep 2
+done
 
-# On lance l'application Nuxt
-echo "Démarrage de l'application..."
+echo "✅ Base de données synchronisée avec succès !"
+
+echo "🚀 Démarrage de l'application sur le port $PORT..."
 node .output/server/index.mjs
