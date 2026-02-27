@@ -5,9 +5,9 @@ services:
     ports:
       - "3018:3018"
     environment:
-      - DB_TYPE=postgres
-      - DATABASE_URL=postgresql://vidi_user:vidi_password@db:5432/vidi_ledger
-      - NUXT_SESSION_PASSWORD=${NUXT_SESSION_PASSWORD:-remplacer_par_un_secret_de_32_caracteres_min}
+      - DB_TYPE=${DB_TYPE:-postgres}
+      - DATABASE_URL=${DATABASE_URL}
+      - NUXT_SESSION_PASSWORD=${NUXT_SESSION_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
