@@ -51,7 +51,7 @@
           class="w-full appearance-none bg-card-inner border border-[#eff3f1] rounded-[24px] py-4 px-6 text-text-heading font-medium focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary/20 transition-all cursor-pointer"
         >
           <option value="all">Toutes les catégories</option>
-          <option v-for="(meta, name) in categoryMap" :key="name" :value="name">{{ name }}</option>
+          <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">{{ cat.name }}</option>
         </select>
         <div class="absolute inset-y-0 right-6 flex items-center pointer-events-none text-text-body/40">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -80,20 +80,20 @@
               </td>
               <td class="px-8 py-5">
                 <div class="flex items-center gap-4">
-                  <div :class="['w-10 h-10 rounded-[14px] text-white flex items-center justify-center shadow-sm shrink-0', tx.meta?.bgColor]">
-                    <span v-html="tx.meta?.icon" class="scale-75"></span>
+                  <div class="w-10 h-10 rounded-[14px] text-white flex items-center justify-center shadow-sm shrink-0" :style="{ backgroundColor: tx.category.color }">
+                    <span v-html="tx.category.icon" class="scale-75"></span>
                   </div>
                   <span class="text-text-heading font-bold text-[16px]">{{ tx.merchant }}</span>
                 </div>
               </td>
               <td class="px-8 py-5">
                 <span class="px-4 py-1.5 rounded-full bg-[#f0f4f2] text-primary text-[13px] font-bold border border-primary/5">
-                  {{ tx.category }}
+                  {{ tx.category.name }}
                 </span>
               </td>
               <td class="px-8 py-5 text-right">
-                <span :class="['text-[17px] font-bold', tx.amount > 0 ? 'text-primary' : 'text-text-heading']">
-                  {{ tx.amount > 0 ? '+' : '' }}{{ formatCurrency(tx.amount) }}
+                <span class="text-[17px] font-bold text-text-heading">
+                  {{ formatCurrency(tx.amount) }}
                 </span>
               </td>
             </tr>
@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 definePageMeta({
   middleware: 'auth'
@@ -152,41 +152,23 @@ const filters: { id: TimeFilter, label: string }[] = [
   { id: 'all', label: 'Tout' },
 ];
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+const categories = ref<any[]>([]);
+const expenses = ref<any[]>([]);
+
+const formatCurrency = (amountInCents: number) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amountInCents / 100);
 };
 
-const categoryMap: Record<string, { bgColor: string, icon: string }> = {
-  'Alimentation': { bgColor: 'bg-[#679178]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>' },
-  'Abonnements': { bgColor: 'bg-primary', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>' },
-  'Transports': { bgColor: 'bg-[#223d31]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>' },
-  'Shopping': { bgColor: 'bg-[#557a66]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>' },
-  'Logement': { bgColor: 'bg-[#1b3127]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>' },
-  'Sorties': { bgColor: 'bg-[#3b5e4a]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" /></svg>' },
-  'Santé & Sport': { bgColor: 'bg-[#1b3127]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>' }
+const fetchData = async () => {
+  const [cats, exps] = await Promise.all([
+    $fetch('/api/categories'),
+    $fetch('/api/expenses')
+  ]);
+  categories.value = cats as any[];
+  expenses.value = exps as any[];
 };
 
-interface Transaction {
-  merchant: string;
-  category: string;
-  date: string;
-  amount: number;
-}
-
-const transactions = ref<Transaction[]>([
-  { merchant: 'Delhaize', category: 'Alimentation', date: '2026-02-27', amount: -65.20 },
-  { merchant: 'Match', category: 'Shopping', date: '2026-02-26', amount: -22.10 },
-  { merchant: 'Spotify', category: 'Abonnements', date: '2026-02-26', amount: -12.99 },
-  { merchant: 'SNCB', category: 'Transports', date: '2026-02-21', amount: -24.50 },
-  { merchant: 'Amazon', category: 'Shopping', date: '2026-02-18', amount: -2.00 },
-  { merchant: 'Rent', category: 'Logement', date: '2026-02-01', amount: -1200.00 },
-  { merchant: 'Restaurant Le Local', category: 'Sorties', date: '2026-02-15', amount: -45.00 },
-  { merchant: 'Colruyt', category: 'Alimentation', date: '2026-01-15', amount: -125.50 },
-  { merchant: 'Basic Fit', category: 'Santé & Sport', date: '2026-01-10', amount: -29.99 },
-  { merchant: 'Apple Store', category: 'Shopping', date: '2025-11-24', amount: -899.00 },
-  { merchant: 'IKEA', category: 'Logement', date: '2024-05-12', amount: -34500.50 },
-  { merchant: 'Remboursement Assurance', category: 'Santé & Sport', date: '2026-02-28', amount: 45.00 },
-]);
+onMounted(fetchData);
 
 const getWeekNumber = (date: Date) => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -197,10 +179,10 @@ const getWeekNumber = (date: Date) => {
 };
 
 const filteredTransactions = computed(() => {
-  const now = new Date('2026-02-27');
-  return transactions.value.filter(tx => {
+  const now = new Date();
+  return expenses.value.filter(tx => {
     // Category filter
-    if (selectedCategory.value !== 'all' && tx.category !== selectedCategory.value) return false;
+    if (selectedCategory.value !== 'all' && String(tx.category.id) !== selectedCategory.value) return false;
 
     // Time filter
     const txDate = new Date(tx.date);
@@ -218,10 +200,8 @@ const filteredTransactions = computed(() => {
 const finalTransactions = computed(() => {
   return filteredTransactions.value
     .filter(tx => tx.merchant.toLowerCase().includes(searchQuery.value.toLowerCase()))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .map(tx => ({
       ...tx,
-      meta: categoryMap[tx.category] || categoryMap['Shopping'],
       formattedDate: new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
     }));
 });

@@ -74,30 +74,64 @@
 
         <!-- Category Selector -->
         <div class="flex flex-col gap-4">
-          <label class="text-text-heading font-bold text-[15px] ml-2">Catégorie</label>
-          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div class="flex justify-between items-center ml-2">
+            <label class="text-text-heading font-bold text-[15px]">Catégorie</label>
             <button 
-              type="button"
-              v-for="(cat, name) in categoryMap" 
-              :key="name"
-              @click="form.category = name"
-              :class="[
-                'flex flex-col items-center gap-3 p-4 rounded-[24px] border transition-all relative overflow-hidden group',
-                form.category === name 
-                  ? 'border-primary bg-primary/5 shadow-sm' 
-                  : 'border-[#e3ece8] bg-white hover:border-primary/30 hover:bg-bg-base'
-              ]"
+              type="button" 
+              @click="openAddCategory"
+              class="text-xs font-bold text-primary hover:underline flex items-center gap-1"
             >
-              <div :class="['w-10 h-10 rounded-xl flex items-center justify-center text-white transition-transform group-hover:scale-110', cat.bgColor]">
-                <span v-html="cat.icon" class="scale-75"></span>
-              </div>
-              <span :class="['text-[11px] font-bold text-center leading-tight', form.category === name ? 'text-primary' : 'text-text-body/60']">{{ name }}</span>
-              <div v-if="form.category === name" class="absolute top-2 right-2">
-                <div class="w-2 h-2 bg-primary rounded-full"></div>
-              </div>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Nouvelle catégorie
             </button>
           </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            <div 
+              v-for="cat in categories" 
+              :key="cat.id"
+              class="relative group"
+            >
+              <button 
+                type="button"
+                @click="form.categoryId = cat.id"
+                :class="[
+                  'w-full flex flex-col items-center gap-3 p-4 rounded-[24px] border transition-all relative overflow-hidden',
+                  form.categoryId === cat.id 
+                    ? 'border-primary bg-primary/5 shadow-sm' 
+                    : 'border-[#e3ece8] bg-white hover:border-primary/30 hover:bg-bg-base'
+                ]"
+              >
+                <div :class="['w-10 h-10 rounded-xl flex items-center justify-center text-white transition-transform group-hover:scale-110']" :style="{ backgroundColor: cat.color }">
+                  <span v-html="cat.icon" class="scale-75"></span>
+                </div>
+                <span :class="['text-[11px] font-bold text-center leading-tight', form.categoryId === cat.id ? 'text-primary' : 'text-text-body/60']">{{ cat.name }}</span>
+                <div v-if="form.categoryId === cat.id" class="absolute top-2 right-2">
+                  <div class="w-2 h-2 bg-primary rounded-full"></div>
+                </div>
+              </button>
+              
+              <!-- Edit Button -->
+              <button 
+                type="button"
+                @click.stop="openEditCategory(cat)"
+                class="absolute -top-1 -right-1 w-6 h-6 bg-white border border-[#e3ece8] rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 hover:bg-bg-base transition-all z-10"
+              >
+                <svg class="w-3 h-3 text-text-body/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Placeholder if no categories -->
+            <div v-if="!categories?.length" class="col-span-full py-4 text-center text-text-body/40 text-sm font-medium">
+              Aucune catégorie créée. Cliquez sur "Nouvelle catégorie".
+            </div>
+          </div>
         </div>
+
 
         <!-- Note / Attachment (Optional) -->
         <div class="flex flex-col gap-3">
@@ -113,7 +147,7 @@
         <!-- Submit Button -->
         <button 
           type="submit"
-          :disabled="isSubmitting"
+          :disabled="isSubmitting || !form.categoryId"
           class="mt-4 w-full bg-primary text-white py-5 rounded-[24px] text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:translate-y-0"
         >
           <svg v-if="isSubmitting" class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -124,6 +158,71 @@
           <span v-else>Enregistrement...</span>
         </button>
       </form>
+    </div>
+
+    <!-- Add/Edit Category Dialog -->
+    <div v-if="showAddCategory" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
+      <div class="bg-white rounded-[32px] p-8 w-full max-w-[450px] shadow-2xl border border-white" @click.stop>
+        <h3 class="text-xl font-bold text-text-heading mb-6">{{ isEditingCategory ? 'Modifier la catégorie' : 'Nouvelle catégorie' }}</h3>
+        <div class="flex flex-col gap-6">
+          <!-- Name -->
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-text-body/60 ml-1">Nom</label>
+            <input 
+              v-model="newCat.name" 
+              placeholder="Ex: Restaurant" 
+              class="w-full bg-[#f8faf9] rounded-xl px-4 py-3 outline-none border border-transparent focus:border-primary/30 font-medium" 
+              @keydown.enter.prevent.stop="handleSaveCategory"
+            />
+          </div>
+
+          <!-- Color -->
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-text-body/60 ml-1">Couleur</label>
+            <div class="flex gap-2 flex-wrap">
+              <button 
+                v-for="color in presetColors" 
+                :key="color" 
+                type="button"
+                @click="newCat.color = color" 
+                class="w-8 h-8 rounded-lg transition-transform hover:scale-110 relative"
+                :style="{ backgroundColor: color }"
+              >
+                <div v-if="newCat.color === color" class="absolute inset-0 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Icon selection -->
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-text-body/60 ml-1">Icône</label>
+            <div class="grid grid-cols-6 gap-2">
+              <button 
+                v-for="icon in presetIcons" 
+                :key="icon.id" 
+                type="button"
+                @click="newCat.icon = icon.svg" 
+                class="w-10 h-10 rounded-xl flex items-center justify-center transition-all border"
+                :class="newCat.icon === icon.svg ? 'border-primary bg-primary/5 text-primary' : 'border-transparent bg-[#f8faf9] text-text-body/40 hover:bg-bg-base'"
+              >
+                <span v-html="icon.svg" class="scale-75"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3 mt-4">
+            <button type="button" @click="showAddCategory = false" class="flex-1 bg-gray-100 py-4 rounded-xl font-bold text-text-body hover:bg-gray-200 transition-colors">Annuler</button>
+            <button type="button" @click="handleSaveCategory" class="flex-1 bg-primary py-4 rounded-xl font-bold text-white shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors">
+              {{ isEditingCategory ? 'Enregistrer' : 'Créer' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Feedback Message -->
@@ -142,7 +241,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 
 definePageMeta({
   middleware: 'auth'
@@ -150,41 +249,114 @@ definePageMeta({
 
 const isSubmitting = ref(false);
 const showSuccess = ref(false);
+const showAddCategory = ref(false);
+const isEditingCategory = ref(false);
+const editCategoryId = ref<number | null>(null);
+
+const categories = ref<any[]>([]);
+const presetColors = ['#294b3c', '#679178', '#557a66', '#3b5e4a', '#1b3127', '#e74c3c', '#f1c40f', '#3498db', '#9b59b6', '#34495e'];
+const presetIcons = [
+  { id: 'cart', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>' },
+  { id: 'bag', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>' },
+  { id: 'home', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>' },
+  { id: 'car', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>' },
+  { id: 'gift', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V6a2 2 0 10-2 2h2zm0 0H9m3 0h3m-3 0V7m0 5H9a2 2 0 00-2 2v2a2 2 0 002 2h10a2 2 0 002-2v-2a2 2 0 00-2-2h-3" /></svg>' },
+  { id: 'health', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>' },
+  { id: 'food', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" /></svg>' },
+  { id: 'phone', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>' },
+  { id: 'music', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>' },
+  { id: 'coffee', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>' },
+  { id: 'bank', svg: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m4 0h1m-7 4h12a2 2 0 002-2V5a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>' }
+];
 
 const form = reactive({
-  amount: undefined,
+  amount: undefined as number | undefined,
   merchant: '',
   date: new Date().toISOString().split('T')[0],
-  category: 'Shopping',
+  categoryId: undefined as number | undefined,
   note: ''
 });
 
-const categoryMap: Record<string, { bgColor: string, icon: string }> = {
-  'Alimentation': { bgColor: 'bg-[#679178]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>' },
-  'Abonnements': { bgColor: 'bg-primary', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>' },
-  'Transports': { bgColor: 'bg-[#223d31]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>' },
-  'Shopping': { bgColor: 'bg-[#557a66]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>' },
-  'Logement': { bgColor: 'bg-[#1b3127]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>' },
-  'Sorties': { bgColor: 'bg-[#3b5e4a]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" /></svg>' },
-  'Santé & Sport': { bgColor: 'bg-[#1b3127]', icon: '<svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>' }
+const newCat = reactive({
+  name: '',
+  color: presetColors[0],
+  icon: presetIcons[0].svg
+});
+
+const fetchCategories = async () => {
+  const data = await $fetch('/api/categories');
+  categories.value = data as any[];
+  if (categories.value.length > 0 && !form.categoryId) {
+    form.categoryId = categories.value[0].id;
+  }
+};
+
+onMounted(fetchCategories);
+
+const openAddCategory = () => {
+  isEditingCategory.value = false;
+  editCategoryId.value = null;
+  newCat.name = '';
+  newCat.color = presetColors[0];
+  newCat.icon = presetIcons[0].svg;
+  showAddCategory.value = true;
+};
+
+const openEditCategory = (cat: any) => {
+  isEditingCategory.value = true;
+  editCategoryId.value = cat.id;
+  newCat.name = cat.name;
+  newCat.color = cat.color;
+  newCat.icon = cat.icon;
+  showAddCategory.value = true;
+};
+
+const handleSaveCategory = async () => {
+  if (!newCat.name) return;
+  try {
+    if (isEditingCategory.value && editCategoryId.value) {
+      const updated = await $fetch(`/api/categories/${editCategoryId.value}`, {
+        method: 'PATCH',
+        body: newCat
+      });
+      const idx = categories.value.findIndex(c => c.id === editCategoryId.value);
+      if (idx !== -1) categories.value[idx] = updated;
+    } else {
+      const created = await $fetch('/api/categories', {
+        method: 'POST',
+        body: newCat
+      });
+      categories.value.push(created);
+      form.categoryId = (created as any).id;
+    }
+    showAddCategory.value = false;
+  } catch (err) {
+    console.error('Failed to save category', err);
+  }
 };
 
 const handleSubmit = async () => {
+  if (!form.categoryId || form.amount === undefined) return;
+  
   isSubmitting.value = true;
   
-  // Simulate API Call
-  await new Promise(resolve => setTimeout(resolve, 1200));
-  
-  console.log('Expense Saved (Mock):', { ...form });
-  
-  isSubmitting.value = false;
-  showSuccess.value = true;
-  
-  // Wait for 1.5s to let the user see the success message, then redirect
-  setTimeout(async () => {
-    showSuccess.value = false;
-    await navigateTo('/transactions');
-  }, 1500);
+  try {
+    await $fetch('/api/expenses', {
+      method: 'POST',
+      body: form
+    });
+    
+    isSubmitting.value = false;
+    showSuccess.value = true;
+    
+    setTimeout(async () => {
+      showSuccess.value = false;
+      await navigateTo('/transactions');
+    }, 1500);
+  } catch (err) {
+    console.error('Failed to save expense', err);
+    isSubmitting.value = false;
+  }
 };
 </script>
 
