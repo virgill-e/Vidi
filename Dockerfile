@@ -30,7 +30,7 @@ RUN npm install drizzle-kit postgres better-sqlite3
 RUN chmod +x start.sh
 
 ENV HOST=0.0.0.0
-ENV PORT=3000
+ENV PORT=3018
 ENV NODE_ENV=production
 
 EXPOSE 3018
