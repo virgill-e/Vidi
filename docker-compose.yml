@@ -3,7 +3,7 @@ services:
     build: .
     container_name: vidi-ledger-app
     ports:
-      - "3000:3000"
+      - "3018:3018"
     environment:
       - DB_TYPE=postgres
       - DATABASE_URL=postgresql://vidi_user:vidi_password@db:5432/vidi_ledger

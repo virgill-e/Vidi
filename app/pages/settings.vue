@@ -206,7 +206,7 @@ const showFeedback = (message: string, isError = false) => {
   feedback.show = true;
   setTimeout(() => {
     feedback.show = false;
-  }, 3000);
+  }, 3018);
 };
 
 const updateProfile = async () => {
