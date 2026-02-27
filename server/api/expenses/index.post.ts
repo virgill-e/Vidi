@@ -20,14 +20,14 @@ export default defineEventHandler(async (event) => {
     }
 
     const user = session.user as { id: number };
-    const newExpense = await db.insert(expenses).values({
+    const newExpense = await fetchOne(db.insert(expenses as any).values({
         userId: user.id,
         categoryId,
         amount: Math.round(amount * 100), // Convert to cents
         merchant,
         date: new Date(date),
         note,
-    }).returning().get();
+    } as any).returning());
 
     return newExpense;
 });

@@ -2,7 +2,7 @@ import { sqliteTable, text as sqliteText, integer as sqliteInteger } from 'drizz
 import { pgTable, text as pgText, integer as pgInteger, serial as pgSerial, timestamp as pgTimestamp } from 'drizzle-orm/pg-core';
 
 // Check if we are using Postgres based on the environment
-const usePostgres = process.env.DATABASE_URL?.startsWith('postgres://') || process.env.DATABASE_URL?.startsWith('postgresql://');
+const usePostgres = process.env.DB_TYPE === 'postgres' || process.env.DATABASE_URL?.startsWith('postgres://') || process.env.DATABASE_URL?.startsWith('postgresql://');
 
 // Helper to switch between dialects
 const table = (name: string, definition: any) => {

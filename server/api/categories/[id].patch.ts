@@ -16,20 +16,19 @@ export default defineEventHandler(async (event) => {
 
     const { name, color, icon } = body;
 
-    const updated = await db.update(categories)
+    const updated = await fetchOne(db.update(categories as any)
         .set({
             name,
             color,
             icon,
-        })
+        } as any)
         .where(
             and(
-                eq(categories.id, Number(id)),
-                eq(categories.userId, user.id)
+                eq((categories as any).id, Number(id)),
+                eq((categories as any).userId, user.id)
             )
         )
-        .returning()
-        .get();
+        .returning());
 
     if (!updated) {
         throw createError({

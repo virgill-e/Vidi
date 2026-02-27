@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Find user
-    const user = await db.select().from(users).where(eq(users.email, email)).get();
+    const user = await fetchOne(db.select().from(users as any).where(eq((users as any).email, email)));
     if (!user) {
         throw createError({
             statusCode: 401,

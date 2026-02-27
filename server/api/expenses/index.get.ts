@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const user = session.user as { id: number };
-    const userExpenses = await db.select({
+    const userExpenses = await fetchAll(db.select({
         id: expenses.id,
         amount: expenses.amount,
         merchant: expenses.merchant,
@@ -23,12 +23,11 @@ export default defineEventHandler(async (event) => {
             icon: categories.icon,
             color: categories.color
         }
-    })
-        .from(expenses)
-        .innerJoin(categories, eq(expenses.categoryId, categories.id))
-        .where(eq(expenses.userId, user.id))
-        .orderBy(desc(expenses.date))
-        .all();
+    } as any)
+        .from(expenses as any)
+        .innerJoin(categories as any, eq((expenses as any).categoryId, (categories as any).id))
+        .where(eq((expenses as any).userId, user.id))
+        .orderBy(desc((expenses as any).date)));
 
     return userExpenses;
 });

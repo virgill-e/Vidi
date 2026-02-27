@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const user = session.user as { id: number };
-    const userCategories = await db.select().from(categories).where(eq(categories.userId, user.id)).all();
+    const userCategories = await fetchAll(db.select().from(categories as any).where(eq((categories as any).userId, user.id)));
 
     return userCategories;
 });

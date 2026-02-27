@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check if user already exists
-    const existingUser = await db.select().from(users).where(eq(users.email, email)).get();
+    const existingUser = await fetchOne(db.select().from(users as any).where(eq((users as any).email, email)));
     if (existingUser) {
         throw createError({
             statusCode: 409,
@@ -26,11 +26,18 @@ export default defineEventHandler(async (event) => {
     const hashedPassword = await hash(password, 10);
 
     // Create user
-    const newUser = await db.insert(users).values({
+    const newUser = await fetchOne(db.insert(users as any).values({
         email,
         name,
         password: hashedPassword,
-    }).returning().get();
+    } as any).returning());
+
+    if (!newUser) {
+        throw createError({
+            statusCode: 500,
+            statusMessage: 'Error creating user',
+        });
+    }
 
     // Seed default categories
     const defaultCategories = [
@@ -42,10 +49,10 @@ export default defineEventHandler(async (event) => {
     ];
 
     for (const cat of defaultCategories) {
-        await db.insert(categories).values({
+        await db.insert(categories as any).values({
             userId: newUser.id,
             ...cat
-        });
+        } as any).execute();
     }
 
     // Create session

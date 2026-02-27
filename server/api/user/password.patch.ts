@@ -11,12 +11,13 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const { currentPassword, newPassword } = await readBody(event);
+    const body = await readBody(event);
+    const { currentPassword, newPassword } = body;
 
     if (!currentPassword || !newPassword) {
         throw createError({
             statusCode: 400,
-            statusMessage: 'Both current and new passwords are required',
+            statusMessage: 'Current and new password are required',
         });
     }
 
@@ -34,7 +35,7 @@ export default defineEventHandler(async (event) => {
     const usersAny = users as any;
 
     // Get user from DB to verify current password
-    const user = await dbAny.select().from(usersAny).where(eq(usersAny.id, userSession.id)).get();
+    const user = await fetchOne(dbAny.select().from(usersAny).where(eq(usersAny.id, userSession.id)));
 
     if (!user) {
         throw createError({

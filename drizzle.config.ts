@@ -1,6 +1,6 @@
 import { defineConfig } from 'drizzle-kit';
 
-const isPostgres = process.env.DATABASE_URL?.startsWith('postgres://') || process.env.DATABASE_URL?.startsWith('postgresql://');
+const isPostgres = process.env.DB_TYPE === 'postgres' || process.env.DATABASE_URL?.startsWith('postgres://') || process.env.DATABASE_URL?.startsWith('postgresql://');
 
 export default defineConfig({
     schema: './server/database/schema.ts',

@@ -20,3 +20,14 @@ const getDb = () => {
 };
 
 export const db = getDb();
+
+// Dialect-agnostic helpers
+export const fetchAll = async (query: any) => {
+    return query.all ? await query.all() : await query;
+};
+
+export const fetchOne = async (query: any) => {
+    if (query.get) return await query.get();
+    const results = await query;
+    return results[0] || null;
+};
