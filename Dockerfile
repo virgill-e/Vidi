@@ -33,7 +33,7 @@ ENV HOST=0.0.0.0
 ENV PORT=3000
 ENV NODE_ENV=production
 
-EXPOSE 3000
+EXPOSE 3018
 
 # On utilise le script de démarrage au lieu de lancer node directement
 CMD ["./start.sh"]
