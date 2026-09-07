@@ -1,5 +1,6 @@
 import { db, fetchOne } from '../../utils/db';
 import { investments } from '../../database/schema';
+import { assertHoldingNotNegative, getHeldQuantity } from '../../utils/investments';
 
 export default defineEventHandler(async (event) => {
     const user = await requireAuth(event);
@@ -8,6 +9,11 @@ export default defineEventHandler(async (event) => {
     // For dividends quantity is optional and defaults to 0; for buy/sell the
     // schema guarantees it is present.
     const parsedQuantity = type === 'dividend' ? (quantity ?? 0) : quantity!;
+
+    if (type === 'sell') {
+        const held = await getHeldQuantity(user.id, asset);
+        assertHoldingNotNegative(asset, type, parsedQuantity, held);
+    }
 
     const newInvestment = await fetchOne(db.insert(investments as any).values({
         userId: user.id,

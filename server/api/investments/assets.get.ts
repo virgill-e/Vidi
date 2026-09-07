@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { investments } from '../../database/schema';
 import { db, fetchAll } from '../../utils/db';
 
@@ -8,11 +8,14 @@ export default defineEventHandler(async (event) => {
     const userId = user.id;
 
     try {
-        // Query all investments of the user
+        // Query all investments of the user, chronological with insertion order (id)
+        // as tiebreak — same-day buy+sell pairs must never be processed sell-before-buy,
+        // which would wrongly count the sale as a short and skip its cost basis.
         const allInvestments = await fetchAll(
             db.select()
               .from(investments as any)
               .where(eq((investments as any).userId, userId))
+              .orderBy(asc((investments as any).date), asc((investments as any).id))
         );
 
         // Group by asset name

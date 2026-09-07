@@ -1,6 +1,7 @@
 import { db, fetchOne } from '../../utils/db';
 import { investments } from '../../database/schema';
 import { eq, and } from 'drizzle-orm';
+import { assertHoldingNotNegative, getHeldQuantity } from '../../utils/investments';
 
 export default defineEventHandler(async (event) => {
     const user = await requireAuth(event);
@@ -11,8 +12,26 @@ export default defineEventHandler(async (event) => {
     if (!id) {
         throw createError({ statusCode: 400, statusMessage: 'ID is required' });
     }
+    const numericId = parseInt(id);
 
     const { type, asset, amount, quantity, date, note } = await validateBody(event, investmentUpdateSchema);
+
+    const existing = await fetchOne(
+        db.select().from(investments as any)
+            .where(and(eq((investments as any).id, numericId), eq((investments as any).userId, userId)))
+    );
+    if (!existing) {
+        throw createError({ statusCode: 404, statusMessage: 'Investment not found' });
+    }
+
+    const resultingType = type ?? (existing as any).type;
+    const resultingAsset = asset ?? (existing as any).asset;
+    const resultingQuantity = quantity ?? (existing as any).quantity;
+
+    if (resultingType !== 'dividend') {
+        const held = await getHeldQuantity(userId, resultingAsset, numericId);
+        assertHoldingNotNegative(resultingAsset, resultingType, resultingQuantity, held);
+    }
 
     const updateData: any = {};
     if (type !== undefined) updateData.type = type;

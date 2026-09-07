@@ -370,8 +370,13 @@ const handleExport = (format: 'csv' | 'pdf') => {
 const currentAssets = computed(() => {
   const assetsGroup = new Map<string, any[]>();
   
-  // Chronological sort
-  const sortedAll = [...investments.value].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Chronological sort — same-day transactions fall back to insertion order (id)
+  // so a same-day buy+sell pair is never processed sell-before-buy, which would
+  // wrongly count the sale as a short and skip subtracting its cost basis.
+  const sortedAll = [...investments.value].sort((a, b) => {
+    const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
+    return dateDiff !== 0 ? dateDiff : a.id - b.id;
+  });
 
   sortedAll.forEach(tx => {
     if (!assetsGroup.has(tx.asset)) assetsGroup.set(tx.asset, []);

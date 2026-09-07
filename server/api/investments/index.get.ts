@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
         .select()
         .from(investments as any)
         .where(eq((investments as any).userId, user.id))
-        .orderBy(desc((investments as any).date)));
+        .orderBy(desc((investments as any).date), desc((investments as any).id)));
 
     return results;
 });
