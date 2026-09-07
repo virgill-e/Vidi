@@ -276,7 +276,13 @@ const firstDateLabel = computed(() => {
 
 // Core metrics, computed chronologically (matches dashboard logic)
 const metrics = computed(() => {
-  const txs = [...transactions.value].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Same-day transactions fall back to insertion order (id) so a same-day buy+sell
+  // pair is never processed sell-before-buy, which would wrongly count the sale as
+  // a short and skip subtracting its cost basis.
+  const txs = [...transactions.value].sort((a, b) => {
+    const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
+    return dateDiff !== 0 ? dateDiff : a.id - b.id;
+  });
 
   let runningQty = 0;
   let runningCostBasis = 0;
@@ -322,7 +328,13 @@ const metrics = computed(() => {
 
 // Cumulative net-invested evolution chart
 const chartData = computed(() => {
-  const txs = [...transactions.value].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // Same-day transactions fall back to insertion order (id) so a same-day buy+sell
+  // pair is never processed sell-before-buy, which would wrongly count the sale as
+  // a short and skip subtracting its cost basis.
+  const txs = [...transactions.value].sort((a, b) => {
+    const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
+    return dateDiff !== 0 ? dateDiff : a.id - b.id;
+  });
   if (txs.length === 0) return [];
 
   let runningQty = 0;
